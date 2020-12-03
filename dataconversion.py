@@ -1,7 +1,7 @@
 import json
 import requests
 
-ENDPOINT = "https://api.github.com/search/commits?q=hash:{}"
+ENDPOINT = "https://api.github.com/repos/{}/commits/{}"
 
 
 with open('data/original_data.json') as json_file:
@@ -14,19 +14,16 @@ with open('data/original_data.json') as json_file:
         header = {'Accept': 'application/vnd.github.cloak-preview'}
         
         
-        resp = (requests.get(ENDPOINT.format(parentSHA),headers=header).json())
-        resp2 = (requests.get(ENDPOINT.format(fixSHA),headers=header).json())
+        resp = requests.get(ENDPOINT.format(repositoryName,parentSHA)).json()
+        resp2 = requests.get(ENDPOINT.format(repositoryName,fixSHA)).json()
 
 
         # TODO COMMIT AUTHOR OR COMMITER
+       
         print(resp)
-        for result in resp['items']:
-            if result['repository']['full_name'] == repositoryName:
-                data[i]['parentTime'] = result['commit']['author']['date']
-                break
-        
-        for result in resp2['items']:
-            if result['repository']['full_name'] == repositoryName:
-                data[i]['fixTime'] = result['commit']['author']['date']
+        data[i]['parentTime'] = resp['commit']['author']['date']
+        data[i]['fixTime'] = resp['commit']['author']['date']
 
-                break
+    with open('data/new_data.json', 'w+') as new_file:
+        json.dump(data, new_file)
+     
