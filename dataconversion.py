@@ -2,28 +2,36 @@ import json
 import requests
 
 ENDPOINT = "https://api.github.com/repos/{}/commits/{}"
-
+SECRETTOKEN = "some-github-token"
 
 with open('data/original_data.json') as json_file:
     data = json.load(json_file)
     for i,entry in enumerate(data):
+        if i < 14571 or i > 17178:
+            
+            continue
+        
+
         print("{}/{}".format(i,len(data)))
         fixSHA = entry['fixCommitSHA1']
         parentSHA = entry["fixCommitParentSHA1"]
         repositoryName = entry["projectName"].replace(".","/")
-        header = {'Accept': 'application/vnd.github.cloak-preview'}
+        header = {'Accept': 'application/vnd.github.cloak-preview',
+        'Authorization': "token {}".format(SECRETTOKEN)}
         
         
-        resp = requests.get(ENDPOINT.format(repositoryName,parentSHA)).json()
-        resp2 = requests.get(ENDPOINT.format(repositoryName,fixSHA)).json()
 
-
-        # TODO COMMIT AUTHOR OR COMMITER
+        resp = requests.get(ENDPOINT.format(repositoryName,fixSHA),headers=header).json()
        
-        print(resp)
-        data[i]['parentTime'] = resp['commit']['author']['date']
-        data[i]['fixTime'] = resp['commit']['author']['date']
 
-    with open('data/new_data.json', 'w+') as new_file:
+        try:
+            data[i]['fixTime'] = resp['commit']['author']['date']
+        except:
+            #  have to recontinue from here
+            print(i)
+            break
+
+
+    with open('data/lastone.json', 'a+') as new_file:
         json.dump(data, new_file)
      
