@@ -38,11 +38,6 @@ def get_parent_folder_path(path):
     return package_path
 
 
-def get_avg_share_of_most_common_package(lsh_buckets):
-    biggest_share_per_buckets = get_shares_of_most_common_package_per_bucket(lsh_buckets)
-    return get_average(biggest_share_per_buckets)
-
-
 def get_average(values_list):
     return sum(values_list) / len(values_list)
 
@@ -66,12 +61,51 @@ def get_shares_of_most_common_package_per_bucket(lsh_buckets):
     return shares_of_most_common_package_per_bucket
 
 
+def analyse_distribution_per_project():
+    project_groups = load_grouped_sstubs()  # requires that get_grouped_sstubs() already ran
+    projects_to_package_details = {}
+    for project, buckets_to_sstubs in project_groups.items():
+        buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
+        same_package_buckets_share = get_share_of_buckets_with_all_sstubs_in_same_package(buckets_package_details)
+
+        # Metrics we decided not to use:
+        # avg_share_of_most_common_package = get_avg_share_of_most_common_package(buckets_package_details)
+        # avg_distance_across_buckets = get_avg_distance_across_buckets(buckets_package_details)
+
+        project_details = {
+            'buckets_amount': len(buckets_to_sstubs.keys()),
+            'sstubs_amount': len([sstub for sstubs in buckets_to_sstubs.values() for sstub in sstubs]),
+            'shares_of_buckets_with_all_sstubs_in_same_package': same_package_buckets_share,
+            # 'avg_share_of_most_common_package': avg_share_of_most_common_package,
+            # 'avg_distance_across_buckets': avg_distance_across_buckets
+        }
+
+        projects_to_package_details[project] = project_details
+
+    return projects_to_package_details
+
+
+print('projects_to_package_details:', analyse_distribution_per_project())
+
+
+# ---------------- functions for unused metrics below --------------------------
+
+
+# not used
+def get_avg_share_of_most_common_package(lsh_buckets):
+    biggest_share_per_buckets = get_shares_of_most_common_package_per_bucket(lsh_buckets)
+    return get_average(biggest_share_per_buckets)
+
+
+# not used
 def get_avg_distances_of_all_buckets(lsh_buckets):
+    # distance between files can only by calculated if min 2 file paths are given
     avg_distances_of_buckets = [get_avg_distance_of_files_in_bucket(bucket['whole_paths'])
                                 for bucket in lsh_buckets.values() if len(bucket['whole_paths']) >= 2]
     return avg_distances_of_buckets
 
 
+# not used
 def get_avg_distance_across_buckets(lsh_buckets):
     avg_distances_of_buckets = get_avg_distances_of_all_buckets(lsh_buckets)
     if not avg_distances_of_buckets:
@@ -80,6 +114,7 @@ def get_avg_distance_across_buckets(lsh_buckets):
     return get_average(avg_distances_of_buckets)
 
 
+# not used
 def get_avg_distance_of_files_in_bucket(file_paths):
     '''
     gets all possible pairs between the given paths and calculates the distance between the files of each pair.
@@ -93,6 +128,7 @@ def get_avg_distance_of_files_in_bucket(file_paths):
     return get_average(all_pairs_distances)
 
 
+# not used
 def get_distance_between_files(path_a, path_b):
     '''
     distance between any 2 files is counted in steps that are necessary from file a to file b.
@@ -119,30 +155,3 @@ def get_distance_between_files(path_a, path_b):
             remaining_steps_to_b = folders_b[index_of_first_different_folder:]
             steps_from_a_to_b = len(remaining_steps_to_a + remaining_steps_to_b)
             return steps_from_a_to_b
-
-
-def analyse_distribution_per_project():
-    # project_groups = get_grouped_sstubs()
-    project_groups = load_grouped_sstubs()
-    projects_to_package_details = {}
-    for project, buckets_to_sstubs in project_groups.items():
-        buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
-        same_package_buckets_share = get_share_of_buckets_with_all_sstubs_in_same_package(buckets_package_details)
-
-        # Metrics we decided not to use:
-        # avg_share_of_most_common_package = get_avg_share_of_most_common_package(buckets_package_details)
-        # avg_distance_across_buckets = get_avg_distance_across_buckets(buckets_package_details)
-
-        project_details = {
-            'buckets_amount': len(buckets_to_sstubs.keys()),
-            'sstubs_amount': len([sstub for sstubs in buckets_to_sstubs.values() for sstub in sstubs]),
-            'shares_of_buckets_with_all_sstubs_in_same_package': same_package_buckets_share,
-            # 'avg_share_of_most_common_package': avg_share_of_most_common_package,
-            # 'avg_distance_across_buckets': avg_distance_across_buckets
-        }
-
-        projects_to_package_details[project] = project_details
-
-    return projects_to_package_details
-
-print('projects_to_package_details:', analyse_distribution_per_project())
