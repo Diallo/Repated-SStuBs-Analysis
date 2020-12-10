@@ -1,6 +1,7 @@
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
+import pprint
 start_time = time.clock()
 
 
@@ -16,7 +17,8 @@ def get_hash_timestamps(filteredBucketHashList, data):
     print('')
     print(' *** Printing min, max timestamps *** ')
     filteredHashTimestamps = []
-
+    allDiffTimes = []
+    bucketDict = dict()
     for y in filteredBucketHashList:
         print('')
         print('Bucket Hash: {}'.format(y))
@@ -27,18 +29,27 @@ def get_hash_timestamps(filteredBucketHashList, data):
             time = data[i]['testTime']
             if hash == y:
                 time = datetime.strptime(time, "%b %d %Y %H:%M:%S").date()
-                # time = datetime.strptime(minTime, '%Y-%m-%dT%H:%M:%SZ')
+                # time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
                 filteredHashTimestamps.append(time)
 
         minTime = min(filteredHashTimestamps)
         maxTime = max(filteredHashTimestamps)
         diffTime = maxTime - minTime
+        allDiffTimes.append(diffTime.days)
+
+        bucketDict[y] = {'timestamps': filteredHashTimestamps, 'diffTime': diffTime.days}
+
         print('Entry Count: {}'.format(len(filteredHashTimestamps)))
         print('Earliest Timestamp: {}'.format(minTime))
         print('Latest Timestamp: {}'.format(maxTime))
         print('Timestamp Diff (Days): {}'.format(diffTime.days))
         print('Time Interval: {}'.format(get_interval(filteredHashTimestamps, minTime, maxTime)))
         filteredHashTimestamps = []
+
+    print('')
+    print(bucketDict)
+    print("\n".join("{}\t{}".format(k, v) for k, v in bucketDict.items()))
+    return bucketDict
 
 
 '''
