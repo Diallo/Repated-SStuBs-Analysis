@@ -11,9 +11,9 @@ def get_interval(filteredHashTimeStamps, minTime, maxTime):
     return interval
 
 
-
 def get_hash_timestamps(filteredBucketHashList, data):
-    '''sstubs-0104-bucket-hash.json
+    '''
+    sstubs-0104-bucket-hash.json
     With filtered list of hashes, get timestamps and print min + max.
     '''
     print('')
