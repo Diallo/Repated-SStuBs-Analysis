@@ -50,7 +50,7 @@ def load_grouped_sstubs():
 
 
 def filter_representative_projects_sstubs(grouped_sstubs):
-    representative_threshold = 5  # Todo determine meaningful threshold
+    representative_threshold = 50  # Todo determine meaningful threshold
     # amount of projects per threshold: 100->75, 60->99, 50->112, 40->127, 20->177 5->295
     filtered_projects_sstubs = {}
     for project_name, buckets in grouped_sstubs.items():
