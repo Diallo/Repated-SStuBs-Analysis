@@ -46,12 +46,15 @@ def get_grouped_sstubs():
 def load_grouped_sstubs():
     with open('../../data/grouped_sstubs.json') as json_file:
         grouped_sstubs = json.load(json_file)
-        return grouped_sstubs
+        return filter_representative_projects_sstubs(grouped_sstubs)
 
 
-
-'''
-todo:
-- adjust previous analysis to grouped format
-- add interval-percentage function to time analysis (shortest interval where x% of bugs within same bucket where fixed)
-'''
+def filter_representative_projects_sstubs(grouped_sstubs):
+    representative_threshold = 50  # Todo determine meaningful threshold
+    # amount of projects per threshold: 100->75, 60->99, 50->112, 40->127, 20->177 5->295
+    filtered_projects_sstubs = {}
+    for project_name, buckets in grouped_sstubs.items():
+        all_sstubs = [sstub for sstubs in buckets.values() for sstub in sstubs]
+        if len(all_sstubs) >= representative_threshold:
+            filtered_projects_sstubs[project_name] = buckets
+    return filtered_projects_sstubs
