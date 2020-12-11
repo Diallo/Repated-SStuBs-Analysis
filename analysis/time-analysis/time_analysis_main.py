@@ -51,6 +51,23 @@ def get_hash_timestamps(filteredBucketHashList, data):
     print('')
     print(bucketDict)
     print("\n".join("{}\t{}".format(k, v) for k, v in bucketDict.items()))
+
+    # rexpected return:
+    # projects_to_bucket_details = {'projectName1': {'buckethash12345':
+    #                                                    {'timestamps': filteredHashTimestamps,
+    #                                                     'OveralldiffTime': diffTime.days,
+    #                                                     'thresholdDiffTime': difftime.days,
+    #                                                     'numOfSstubs': entryCount
+    #                                                     },
+    #                                                'buckethash6':
+    #                                                    {'timestamps': filteredHashTimestamps,
+    #                                                     'OveralldiffTime': diffTime.days,
+    #                                                     'thresholdDiffTime': difftime.days,
+    #                                                     'numOfSstubs': entryCount
+    #                                                     },
+    #                                                }
+    #                               }
+
     return bucketDict
 
 
