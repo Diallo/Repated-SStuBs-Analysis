@@ -1,2 +1,3 @@
 BUCKET_HASH_KEY = 'bucketHash'
 PROJECT_NAME_KEY = 'projectName'
+MIN_SSTUB_PERCENTAGE = 0.8
