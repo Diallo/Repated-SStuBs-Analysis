@@ -1,6 +1,4 @@
-# import itertools
-
-from data_preparation.data_grouping import load_grouped_sstubs
+from data_preparation.data_grouping import load_grouped_filtered_sstubs
 
 
 def get_buckets_to_package_details(buckets_to_sstubs):
@@ -60,7 +58,7 @@ def get_shares_of_most_common_package_per_bucket(lsh_buckets):
 
 
 def analyse_distribution_per_project():
-    project_groups = load_grouped_sstubs()  # requires that get_grouped_sstubs() already ran
+    project_groups = load_grouped_filtered_sstubs()  # requires that get_grouped_sstubs() already ran
     projects_to_package_details = {}
     for project, buckets_to_sstubs in project_groups.items():
         buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
@@ -84,7 +82,6 @@ def analyse_distribution_per_project():
 
 
 print('projects_to_package_details:', analyse_distribution_per_project())
-
 
 # ---------------- functions for unused metrics below --------------------------
 
