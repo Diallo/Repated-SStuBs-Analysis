@@ -1,98 +1,77 @@
-import json
 import time
 from datetime import datetime
+import math
 import pprint
 
-start_time = time.clock()
+from data_preparation.data_grouping import get_grouped_sstubs
+from constants import MIN_SSTUB_PERCENTAGE
+
+start_time = time.process_time()
 
 
-def get_interval(filteredHashTimeStamps, minTime, maxTime):
-    interval = (maxTime - minTime) / (len(filteredHashTimeStamps))
-    return interval
-
-
-def get_hash_timestamps(filteredBucketHashList, data):
+def find_min_time_interval(timestamps_list, min_sstubs_percentage):
     '''
-    sstubs-0104-bucket-hash.json
-    With filtered list of hashes, get timestamps and print min + max.
+    :param timestamps_list: list of timestamps from all sstubs in bucket
+    :param min_sstubs_percentage: minimum percentage of bugs that must be part of interval
+    :return: shortest time interval in which at least the given percentage of time stamps is covered
     '''
+
+    # calculate number of timestamps that must be within interval (ceil always rounds up)
+    min_timestamps_amount = int(math.ceil(len(timestamps_list) * min_sstubs_percentage))
+    sorted_timestamps = sorted(timestamps_list)
+
+    shortest_interval = 0
+    for i in range(len(timestamps_list)):
+        first_timestamp_index = i
+        last_timestamp_index = first_timestamp_index + min_timestamps_amount
+
+        if last_timestamp_index >= len(sorted_timestamps):
+            break
+
+        diffTime = sorted_timestamps[last_timestamp_index] - sorted_timestamps[first_timestamp_index]
+        if i == 0 or diffTime.days < shortest_interval:
+            shortest_interval = diffTime.days
+
+    return shortest_interval
+
+
+def get_projects_to_bucket_details():
+    data = get_grouped_sstubs()
+    projects_to_buckets_details = dict()
+
+    for project_name, bucket in data.items():
+        projects_to_buckets_details[project_name] = {}  # Create new entry in dict for each project
+
+        for bucket_id, sstubs in bucket.items():
+            bucket_timestamps = []  # reset timestamp list for each bucket
+
+            for i, entry in enumerate(sstubs):
+                time = (sstubs[i]['fixTime'])
+                time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
+                bucket_timestamps.append(time)
+
+            min_time = min(bucket_timestamps)
+            max_time = max(bucket_timestamps)
+            diff_time = max_time - min_time
+            num_of_sstubs = len(sstubs)
+            interval = find_min_time_interval(bucket_timestamps, MIN_SSTUB_PERCENTAGE)
+
+            projects_to_buckets_details[project_name][bucket_id] = {'timestamps': bucket_timestamps,
+                                                                    'overallDiffTime': diff_time.days,
+                                                                    'thresholdDiffTime': interval,
+                                                                    'numOfSstubs': num_of_sstubs
+                                                                    }
+
+    pprint.pprint(projects_to_buckets_details)
+    return projects_to_buckets_details
+
+
+def main():
+    get_projects_to_bucket_details()
     print('')
-    print(' *** Printing min, max timestamps *** ')
-    filteredHashTimestamps = []
-    allDiffTimes = []
-    bucketDict = dict()
-    for y in filteredBucketHashList:
-        print('')
-        print('Bucket Hash: {}'.format(y))
-
-        for i, entry in enumerate(data):  # attempt to grab all timestamps where json has this hash value
-
-            hash = data[i]['bucketHash']
-            time = data[i]['testTime']
-            if hash == y:
-                time = datetime.strptime(time, "%b %d %Y %H:%M:%S").date()
-                # time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
-                filteredHashTimestamps.append(time)
-
-        minTime = min(filteredHashTimestamps)
-        maxTime = max(filteredHashTimestamps)
-        diffTime = maxTime - minTime
-        allDiffTimes.append(diffTime.days)
-
-        bucketDict[y] = {'timestamps': filteredHashTimestamps, 'diffTime': diffTime.days}
-
-        print('Entry Count: {}'.format(len(filteredHashTimestamps)))
-        print('Earliest Timestamp: {}'.format(minTime))
-        print('Latest Timestamp: {}'.format(maxTime))
-        print('Timestamp Diff (Days): {}'.format(diffTime.days))
-        print('Time Interval: {}'.format(get_interval(filteredHashTimestamps, minTime, maxTime)))
-        filteredHashTimestamps = []
-
+    print("--- %s seconds ---" % (time.process_time() - start_time))
     print('')
-    print(bucketDict)
-    print("\n".join("{}\t{}".format(k, v) for k, v in bucketDict.items()))
-    return bucketDict
 
 
-def get_unique(bucketHashList):
-    '''
-    Get unique hashes from json
-    '''
-    unique = []
-
-    for hash in bucketHashList:
-        if hash in unique:
-            continue
-        else:
-            unique.append(hash)
-    return unique
-
-
-'''
-Loop through and grab bucket hashes.
-'''
-
-with open('testTimestamps.json') as json_file:
-    data = json.load(json_file)
-
-    bucketHashList = []
-    for i, entry in enumerate(data):
-        bucketHash = data[i]['bucketHash']
-        bucketHashList.append(bucketHash)
-
-    print('')
-    print(' *** Unfiltered list of bucket hashes *** ')
-    print(bucketHashList)  # Print unfiltered list
-    print('')
-    filteredBucketHashList = get_unique(bucketHashList)
-    print(' *** Unique list of bucket hashes *** ')
-    print(filteredBucketHashList)  # Print filtered list
-
-    get_hash_timestamps(filteredBucketHashList, data)
-
-print('')
-print("--- %s seconds ---" % (time.clock() - start_time))
-print('')
-
-# TODO: Check time interval for each bucket
-# TODO: Check distribution
+if __name__ == "__main__":
+    main()
