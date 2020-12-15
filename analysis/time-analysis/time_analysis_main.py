@@ -6,8 +6,6 @@ import pprint
 from data_preparation.data_grouping import get_grouped_sstubs
 from constants import MIN_SSTUB_PERCENTAGE
 
-start_time = time.process_time()
-
 
 def find_min_time_interval(timestamps_list, min_sstubs_percentage):
     '''
@@ -39,14 +37,14 @@ def get_projects_to_bucket_details():
     data = get_grouped_sstubs()
     projects_to_buckets_details = dict()
 
-    for project_name, bucket in data.items():
+    for project_name, buckets_to_sstubs in data.items():
         projects_to_buckets_details[project_name] = {}  # Create new entry in dict for each project
 
-        for bucket_id, sstubs in bucket.items():
+        for bucket_id, sstubs in buckets_to_sstubs.items():
             bucket_timestamps = []  # reset timestamp list for each bucket
 
-            for i, entry in enumerate(sstubs):
-                time = (sstubs[i]['fixTime'])
+            for sstub in sstubs:
+                time = sstub['fixTime']
                 time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
                 bucket_timestamps.append(time)
 
@@ -67,6 +65,7 @@ def get_projects_to_bucket_details():
 
 
 def main():
+    start_time = time.process_time()
     get_projects_to_bucket_details()
     print('')
     print("--- %s seconds ---" % (time.process_time() - start_time))
