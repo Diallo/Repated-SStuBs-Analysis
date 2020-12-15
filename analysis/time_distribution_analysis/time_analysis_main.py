@@ -3,8 +3,56 @@ from datetime import datetime
 import math
 import pprint
 
-from data_preparation.data_grouping import load_grouped_filtered_sstubs
 from constants import MIN_SSTUB_PERCENTAGE
+from utils import get_average
+
+
+def analyse_time_project_level(grouped_sstubs):
+    projects_to_bucket_details = get_projects_to_bucket_details(grouped_sstubs)
+    aggregated_results = {}
+    for project_name, bucket_details in projects_to_bucket_details.items():
+        timestamps_counts = []
+        overall_difftimes = []
+        threshold_difftimes = []
+        for bucket in bucket_details.values():
+            timestamps_counts.append(len(bucket['timestamps']))
+            overall_difftimes.append(bucket['overallDiffTime'])
+            threshold_difftimes.append(bucket['thresholdDiffTime'])
+
+        aggregated_results[project_name] = {'avg_sstubs_per_bucket': get_average(timestamps_counts),
+                                            'avg_total_difftime': get_average(overall_difftimes),
+                                            'avg_threshold_difftime': get_average(threshold_difftimes)}
+    return aggregated_results
+
+
+def get_projects_to_bucket_details(grouped_sstubs):
+    projects_to_buckets_details = dict()
+
+    for project_name, buckets_to_sstubs in grouped_sstubs.items():
+        projects_to_buckets_details[project_name] = {}  # Create new entry in dict for each project
+
+        for bucket_id, sstubs in buckets_to_sstubs.items():
+            bucket_timestamps = []  # reset timestamp list for each bucket
+
+            for sstub in sstubs:
+                time = sstub['fixTime']
+                time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
+                bucket_timestamps.append(time)
+
+            min_time = min(bucket_timestamps)
+            max_time = max(bucket_timestamps)
+            diff_time = max_time - min_time
+            num_of_sstubs = len(sstubs)
+            interval = find_min_time_interval(bucket_timestamps, MIN_SSTUB_PERCENTAGE)
+
+            projects_to_buckets_details[project_name][bucket_id] = {'timestamps': bucket_timestamps,
+                                                                    'overallDiffTime': diff_time.days,
+                                                                    'thresholdDiffTime': interval,
+                                                                    'numOfSstubs': num_of_sstubs
+                                                                    }
+
+    pprint.pprint(projects_to_buckets_details)
+    return projects_to_buckets_details
 
 
 def find_min_time_interval(timestamps_list, min_sstubs_percentage):
@@ -31,37 +79,6 @@ def find_min_time_interval(timestamps_list, min_sstubs_percentage):
             shortest_interval = diffTime.days
 
     return shortest_interval
-
-
-def get_projects_to_bucket_details():
-    data = load_grouped_filtered_sstubs()
-    projects_to_buckets_details = dict()
-
-    for project_name, buckets_to_sstubs in data.items():
-        projects_to_buckets_details[project_name] = {}  # Create new entry in dict for each project
-
-        for bucket_id, sstubs in buckets_to_sstubs.items():
-            bucket_timestamps = []  # reset timestamp list for each bucket
-
-            for sstub in sstubs:
-                time = sstub['fixTime']
-                time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ').date()
-                bucket_timestamps.append(time)
-
-            min_time = min(bucket_timestamps)
-            max_time = max(bucket_timestamps)
-            diff_time = max_time - min_time
-            num_of_sstubs = len(sstubs)
-            interval = find_min_time_interval(bucket_timestamps, MIN_SSTUB_PERCENTAGE)
-
-            projects_to_buckets_details[project_name][bucket_id] = {'timestamps': bucket_timestamps,
-                                                                    'overallDiffTime': diff_time.days,
-                                                                    'thresholdDiffTime': interval,
-                                                                    'numOfSstubs': num_of_sstubs
-                                                                    }
-
-    pprint.pprint(projects_to_buckets_details)
-    return projects_to_buckets_details
 
 
 def main():

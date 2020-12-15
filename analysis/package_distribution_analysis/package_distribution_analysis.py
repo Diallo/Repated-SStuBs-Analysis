@@ -1,4 +1,32 @@
-from data_preparation.data_grouping import load_grouped_filtered_sstubs
+def analyse_packages_project_level(grouped_sstubs):
+    projects_to_package_details = {}
+    for project, buckets_to_sstubs in grouped_sstubs.items():
+        buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
+        same_package_buckets_share = get_share_of_buckets_with_all_sstubs_in_same_package(buckets_package_details)
+
+        # Metrics we decided not to use:
+        # avg_share_of_most_common_package = get_avg_share_of_most_common_package(buckets_package_details)
+        # avg_distance_across_buckets = get_avg_distance_across_buckets(buckets_package_details)
+
+        project_details = {
+            'buckets_amount': len(buckets_to_sstubs.keys()),
+            'sstubs_amount': len([sstub for sstubs in buckets_to_sstubs.values() for sstub in sstubs]),
+            'shares_of_buckets_with_all_sstubs_in_same_package': same_package_buckets_share,
+            # 'avg_share_of_most_common_package': avg_share_of_most_common_package,
+            # 'avg_distance_across_buckets': avg_distance_across_buckets
+        }
+
+        projects_to_package_details[project] = project_details
+
+    return projects_to_package_details
+
+
+def analyse_packages_per_buckets(grouped_sstubs):
+    results = {}
+    for project_name, buckets_to_sstubs in grouped_sstubs.items():
+        buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
+        results[project_name] = buckets_package_details
+    return results
 
 
 def get_buckets_to_package_details(buckets_to_sstubs):
@@ -7,11 +35,21 @@ def get_buckets_to_package_details(buckets_to_sstubs):
         sstub_paths = [sstub['bugFilePath'] for sstub in sstubs_list]
         package_paths = [get_parent_folder_path(path) for path in sstub_paths]
         packages_to_sstub_counts = get_paths_to_counts(package_paths)
-        buckets_package_details[bucket] = {'whole_paths': sstub_paths,
-                                           'package_paths': package_paths,
+        max_package_sstubs_share = get_shares_of_most_common_package(sstub_paths, packages_to_sstub_counts)
+
+        buckets_package_details[bucket] = {'sstubs': sstubs_list,
                                            'packages_to_sstub_counts': packages_to_sstub_counts,
+                                           'max_package_sstubs_share': max_package_sstubs_share
                                            }
+
     return buckets_package_details
+
+
+def get_shares_of_most_common_package(sstub_paths, packages_to_sstub_counts):
+    sstubs_total = len(sstub_paths)
+    share_of_bugs_in_most_common_package = get_share_of_bugs_in_most_common_package(packages_to_sstub_counts,
+                                                                                    sstubs_total)
+    return share_of_bugs_in_most_common_package
 
 
 def get_share_of_bugs_in_most_common_package(packages_to_sstub_counts, sstubs_with_hash_amount):
@@ -35,53 +73,20 @@ def get_parent_folder_path(path):
     return package_path
 
 
-def get_average(values_list):
-    return sum(values_list) / len(values_list)
+def get_share_of_buckets_with_all_sstubs_in_same_package(buckets_to_package_details):
+    single_package_buckets = get_single_package_buckets_count(buckets_to_package_details)
+    buckets_total = len(buckets_to_package_details.keys())
+    return single_package_buckets / buckets_total
 
 
-def get_share_of_buckets_with_all_sstubs_in_same_package(buckets_to_sstubs):
-    biggest_share_per_buckets = get_shares_of_most_common_package_per_bucket(buckets_to_sstubs)
-    buckets_total = len(buckets_to_sstubs.values())
-    buckets_with_all_sstubs_in_one_package = len([share for share in biggest_share_per_buckets if share == 1])
-    return buckets_with_all_sstubs_in_one_package / buckets_total
-
-
-def get_shares_of_most_common_package_per_bucket(lsh_buckets):
-    shares_of_most_common_package_per_bucket = []
-    for bucket in lsh_buckets.values():
-        sstubs_total = len(bucket['whole_paths'])
-        packages_to_sstub_counts = bucket['packages_to_sstub_counts']
-        share_of_bugs_in_most_common_package = get_share_of_bugs_in_most_common_package(packages_to_sstub_counts,
-                                                                                        sstubs_total)
-        shares_of_most_common_package_per_bucket.append(share_of_bugs_in_most_common_package)
-    return shares_of_most_common_package_per_bucket
-
-
-def analyse_distribution_per_project():
-    project_groups = load_grouped_filtered_sstubs()  # requires that get_grouped_sstubs() already ran
-    projects_to_package_details = {}
-    for project, buckets_to_sstubs in project_groups.items():
-        buckets_package_details = get_buckets_to_package_details(buckets_to_sstubs)
-        same_package_buckets_share = get_share_of_buckets_with_all_sstubs_in_same_package(buckets_package_details)
-
-        # Metrics we decided not to use:
-        # avg_share_of_most_common_package = get_avg_share_of_most_common_package(buckets_package_details)
-        # avg_distance_across_buckets = get_avg_distance_across_buckets(buckets_package_details)
-
-        project_details = {
-            'buckets_amount': len(buckets_to_sstubs.keys()),
-            'sstubs_amount': len([sstub for sstubs in buckets_to_sstubs.values() for sstub in sstubs]),
-            'shares_of_buckets_with_all_sstubs_in_same_package': same_package_buckets_share,
-            # 'avg_share_of_most_common_package': avg_share_of_most_common_package,
-            # 'avg_distance_across_buckets': avg_distance_across_buckets
-        }
-
-        projects_to_package_details[project] = project_details
-
-    return projects_to_package_details
-
-
-print('projects_to_package_details:', analyse_distribution_per_project())
+def get_single_package_buckets_count(buckets_to_package_details):
+    # returns amount of buckets where all sstubs are in same package
+    count = 0
+    for bucket_id, package_details in buckets_to_package_details.items():
+        is_all_sstubs_in_one_package = package_details['max_package_sstubs_share'] == 1
+        if is_all_sstubs_in_one_package:
+            count += 1
+    return count
 
 # ---------------- functions for unused metrics below --------------------------
 
