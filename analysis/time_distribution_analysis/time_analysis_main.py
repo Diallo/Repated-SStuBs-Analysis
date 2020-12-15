@@ -3,7 +3,7 @@ from datetime import datetime
 import math
 import pprint
 
-from data_preparation.data_grouping import get_grouped_sstubs
+from data_preparation.data_grouping import load_grouped_filtered_sstubs
 from constants import MIN_SSTUB_PERCENTAGE
 
 
@@ -16,8 +16,8 @@ def find_min_time_interval(timestamps_list, min_sstubs_percentage):
 
     # calculate number of timestamps that must be within interval (ceil always rounds up)
     min_timestamps_amount = int(math.ceil(len(timestamps_list) * min_sstubs_percentage))
-    sorted_timestamps = sorted(timestamps_list)
 
+    sorted_timestamps = sorted(timestamps_list)
     shortest_interval = 0
     for i in range(len(timestamps_list)):
         first_timestamp_index = i
@@ -34,7 +34,7 @@ def find_min_time_interval(timestamps_list, min_sstubs_percentage):
 
 
 def get_projects_to_bucket_details():
-    data = get_grouped_sstubs()
+    data = load_grouped_filtered_sstubs()
     projects_to_buckets_details = dict()
 
     for project_name, buckets_to_sstubs in data.items():
