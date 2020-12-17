@@ -31,7 +31,7 @@ class AnalysisFacade:
 
     def combine_bucket_details(self, project_name):
         project_to_sstubs = {project_name: self.grouped_filtered_sstubs[project_name]}
-        package_analysis = self._get_package_analysis_per_bucket(project_to_sstubs)
+        package_analysis = self.get_package_analysis_per_bucket(project_to_sstubs)
         time_analysis = self.get_time_analysis_per_bucket(project_to_sstubs)
         combined_bucket_details = {}
         for bucket_id in time_analysis[project_name].keys():
