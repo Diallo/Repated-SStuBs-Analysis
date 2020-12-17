@@ -51,7 +51,7 @@ def get_projects_to_bucket_details(grouped_sstubs):
                                                                     'numOfSstubs': num_of_sstubs
                                                                     }
 
-    pprint.pprint(projects_to_buckets_details)
+    # pprint.pprint(projects_to_buckets_details)
     return projects_to_buckets_details
 
 

@@ -37,10 +37,11 @@ def get_buckets_to_package_details(buckets_to_sstubs):
         packages_to_sstub_counts = get_paths_to_counts(package_paths)
         max_package_sstubs_share = get_shares_of_most_common_package(sstub_paths, packages_to_sstub_counts)
 
-        buckets_package_details[bucket] = {'sstubs': sstubs_list,
-                                           'packages_to_sstub_counts': packages_to_sstub_counts,
-                                           'max_package_sstubs_share': max_package_sstubs_share
-                                           }
+        buckets_package_details[bucket] = {
+            # 'sstubs': sstubs_list, #commented out to reduce output size for Jupyter
+            'packages_to_sstub_counts': packages_to_sstub_counts,
+            'max_package_sstubs_share': max_package_sstubs_share
+        }
 
     return buckets_package_details
 
