@@ -6,11 +6,26 @@ def exclude_sstubs_with_letters(grouped_sstubs):
     :param grouped_sstubs: sstubs grouped by project as defined in the data_preparation module
     :return: grouped sstubs where the sourceBeforeFix is purely composed of digits
     '''
+    return exclude_sstubs_with_regex(grouped_sstubs, r"\d+")
+
+def exclude_sstubs_with_digits_only(grouped_sstubs):
+    '''
+    :param grouped_sstubs: sstubs grouped by project as defined in the data_preparation module
+    :return: grouped sstubs where the sourceBeforeFix is purely composed of digits
+    '''
+    return exclude_sstubs_with_regex(grouped_sstubs, r"(?!^\d+$)^.+$")
+
+def exclude_sstubs_with_regex(grouped_sstubs, regex_filter):
+    '''
+    :param grouped_sstubs: sstubs grouped by project as defined in the data_preparation module
+    :param regex_filter:
+    :return: grouped sstubs where the sourceBeforeFix matches regex_filter
+    '''
     filtered_grouped_sstubs = {}
     for project, project_clone_groups in grouped_sstubs.items():
         filtered_project_clone_groups = {}
         for bucket_hash, sstubs_for_hash in project_clone_groups.items():
-            filtered_sstubs_for_hash = list(filter(lambda sstub: re.match(r"\d+", sstub[constants.SOURCE_BEFORE_FIX_KEY]), sstubs_for_hash))
+            filtered_sstubs_for_hash = list(filter(lambda sstub: re.match(regex_filter, sstub[constants.SOURCE_BEFORE_FIX_KEY]), sstubs_for_hash))
             if len(filtered_sstubs_for_hash) > 0:
                 filtered_project_clone_groups[bucket_hash] = filtered_sstubs_for_hash
         if len(filtered_project_clone_groups) > 0:

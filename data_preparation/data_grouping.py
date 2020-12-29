@@ -1,7 +1,7 @@
 import copy
 import json
 
-from constants import BUCKET_HASH_KEY, PROJECT_NAME_KEY
+from constants import BUCKET_HASH_KEY, BUG_TYPE_KEY, PROJECT_NAME_KEY
 
 
 # use this for analysis
@@ -47,7 +47,8 @@ def get_grouped_sstubs():
     grouped_sstubs = {}
     for sstub in data:
         project_name = sstub[PROJECT_NAME_KEY]
-        bucket_hash = sstub[BUCKET_HASH_KEY]
+        bucket_hash = f"{sstub[BUCKET_HASH_KEY]}-{sstub[BUG_TYPE_KEY]}"
+        sstub[BUCKET_HASH_KEY] = bucket_hash
 
         # add project to grouped_sstubs
         is_project_already_in_dict = project_name in grouped_sstubs.keys()
@@ -60,8 +61,16 @@ def get_grouped_sstubs():
             grouped_sstubs[project_name][bucket_hash] = []
 
         # add sstub to bucket
-        grouped_sstubs[project_name][bucket_hash].append(sstub)
+        add_sstub_to_bucket = True
+        if is_bucket_already_in_dict:
+            for existing_sstub in grouped_sstubs[project_name][bucket_hash]:
+                if sstub == existing_sstub:
+                    add_sstub_to_bucket = False
+                    break
 
+        if add_sstub_to_bucket:   
+            grouped_sstubs[project_name][bucket_hash].append(sstub)
+    
     filtered_grouped_sstubs = exclude_buckets_with_single_sstubs(grouped_sstubs)
     with open('./data/grouped_sstubs.json', 'w+') as new_file:
         json.dump(filtered_grouped_sstubs, new_file)
