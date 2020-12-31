@@ -16,10 +16,9 @@ def xy_axes_clone_group_size_to_number_of_groups(sstubs_to_plot):
         y_arr.append(len(v))
     return (x_arr, y_arr)
 
-data_load.get_grouped_sstubs()
-all_sstubs = data_load.load_grouped_filtered_sstubs()
-sstubs_with_digits_only = clone_analysis.exclude_sstubs_with_letters(all_sstubs)
-valid_sstubs = clone_analysis.exclude_sstubs_with_digits_only(all_sstubs)
+all_sstubs = data_load.exclude_buckets_with_single_sstubs(data_load.load_raw_grouped_sstubs())
+sstubs_with_digits_only = data_load.exclude_sstubs_with_letters(all_sstubs)
+valid_sstubs = data_load.exclude_sstubs_with_digits_only(all_sstubs)
 
 total = 0
 for proj, clone_groups_for_proj in valid_sstubs.items():
