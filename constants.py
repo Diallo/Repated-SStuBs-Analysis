@@ -1,3 +1,5 @@
 BUCKET_HASH_KEY = 'bucketHash'
+BUG_TYPE_KEY = 'bugType'
 PROJECT_NAME_KEY = 'projectName'
+SOURCE_BEFORE_FIX_KEY = 'sourceBeforeFix'
 MIN_SSTUB_PERCENTAGE = 0.8
