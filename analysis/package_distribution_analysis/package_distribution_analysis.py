@@ -35,27 +35,34 @@ def get_buckets_to_package_details(buckets_to_sstubs):
         sstub_paths = [sstub['bugFilePath'] for sstub in sstubs_list]
         package_paths = [get_parent_folder_path(path) for path in sstub_paths]
         packages_to_sstub_counts = get_paths_to_counts(package_paths)
-        max_package_sstubs_share = get_shares_of_most_common_package(sstub_paths, packages_to_sstub_counts)
+        files_to_sstub_counts = get_paths_to_counts(sstub_paths)
+        max_package_sstubs_share = get_shares_of_most_common_paths(sstub_paths, packages_to_sstub_counts)
+        max_file_sstubs_share = get_shares_of_most_common_paths(sstub_paths, files_to_sstub_counts)
+        affected_packages_count = len(set(package_paths))
+        affected_files_count = len(set(sstub_paths))
 
         buckets_package_details[bucket] = {
             # 'sstubs': sstubs_list, #commented out to reduce output size for Jupyter
             'packages_to_sstub_counts': packages_to_sstub_counts,
-            'max_package_sstubs_share': max_package_sstubs_share
+            'max_package_sstubs_share': max_package_sstubs_share,
+            'max_file_sstubs_share': max_file_sstubs_share,
+            'affected_packages_count': affected_packages_count,
+            'affected_files_count': affected_files_count,
         }
 
     return buckets_package_details
 
 
-def get_shares_of_most_common_package(sstub_paths, packages_to_sstub_counts):
+def get_shares_of_most_common_paths(sstub_paths, files_to_sstub_counts):
     sstubs_total = len(sstub_paths)
-    share_of_bugs_in_most_common_package = get_share_of_bugs_in_most_common_package(packages_to_sstub_counts,
-                                                                                    sstubs_total)
-    return share_of_bugs_in_most_common_package
+    share_of_bugs_in_most_common_path = get_share_of_bugs_in_most_common_path(files_to_sstub_counts,
+                                                                              sstubs_total)
+    return share_of_bugs_in_most_common_path
 
 
-def get_share_of_bugs_in_most_common_package(packages_to_sstub_counts, sstubs_with_hash_amount):
-    count_of_most_affected_package = max(packages_to_sstub_counts.values())
-    return count_of_most_affected_package / sstubs_with_hash_amount
+def get_share_of_bugs_in_most_common_path(paths_to_sstub_counts, sstubs_total):
+    count_of_most_affected_package = max(paths_to_sstub_counts.values())
+    return count_of_most_affected_package / sstubs_total
 
 
 def get_paths_to_counts(paths: list):
